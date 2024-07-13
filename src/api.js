@@ -1,5 +1,5 @@
 import axios from "axios";
-export const api_url = "http://localhost:3000";
+export const api_url = "https://project-server-lf51.onrender.com";
 
 const api = axios.create({
   baseURL: `${api_url}`,
@@ -7,4 +7,3 @@ const api = axios.create({
 
 export default api
 
-//https://project-server-lf51.onrender.com
