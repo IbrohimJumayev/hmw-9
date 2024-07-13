@@ -10,14 +10,18 @@ import { Routes, useNavigate, Route } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import api from "./api";
+import { useDispatch, useSelector } from "react-redux";
+import { addPost, deletePost } from "./featuries/postsSlice";
 
 function App() {
-  const [posts, setPosts] = useState([]);
+  const dispatch = useDispatch()
+  const posts = useSelector((state) => state.posts.posts)
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [postTitle, setPostTitle] = useState("");
   const [postBody, setPostBody] = useState("");
   const navigate = useNavigate();
+  const [edit, setEdit] = useState(false)
 
   useEffect(() => {
     async function fetchPosts() {
@@ -41,23 +45,29 @@ function App() {
     setSearchResults(filteredResults.reverse());
   }, [posts, search]);
 
-  
 
-  const handleSubmit = (e) => {
+
+  const handleSubmit = async(e) => {
     e.preventDefault();
     const id = posts.length ? posts[posts.length - 1].id + 1 : 1;
     const datetime = format(new Date(), "MMMM dd, yyyy pp");
     const newPost = { id, title: postTitle, datetime, body: postBody };
-    const allPosts = [...posts, newPost];
-    setPosts(allPosts);
-    setPostTitle("");
-    setPostBody("");
-    navigate("/");
+
+    try {
+      const response = await api.post('posts', newPost)
+      dispatch(addPost(response.data));
+      setPostTitle("");
+      setPostBody("");
+      navigate("/");
+    } catch (error) {
+      console.error(error.message)
+    }
+
+   
   };
 
   const handleDelete = (id) => {
-    const postsList = posts.filter((post) => post.id !== id);
-    setPosts(postsList);
+    dispatch(deletePost(id))
     navigate("/");
   };
 
@@ -81,7 +91,7 @@ function App() {
         />
         <Route
           path="/post/:id"
-          element={<PostPage posts={posts} handleDelete={handleDelete} />}
+          element={<PostPage posts={posts} handleDelete={handleDelete} navigate={navigate} edit={edit} setEdit={setEdit} />}
         />
         <Route path="/about" component={<About />} />
         <Route path="*" component={<Missing />} />
